@@ -1,0 +1,53 @@
+parameters:
+    ns.color_admin.menu_builder: NS\ColorAdminBundle\Menu\MenuBuilder
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    NS\ColorAdminBundle\:
+        resource: '../../'
+
+    ns.color_admin.menu_builder:
+        class: "%ns.color_admin.menu_builder%"
+        arguments: ["@knp_menu.factory"]
+        tags:
+            - { name: knp_menu.menu_builder, method: createSidebarMenu, alias: sidebar } # The alias is what is used to retrieve the menu
+            - { name: knp_menu.menu_builder, method: createSidebarMenu, alias: breadcrumbs }
+
+    NS\ColorAdminBundle\Twig\TemplateExtension:
+        arguments: [ "%color_admin.templates%" ]
+
+    NS\ColorAdminBundle\Form\Extension\MaskExtension:
+        tags:
+            - { name: form.type_extension, extended_type: Symfony\Component\Form\Extension\Core\Type\TextType }
+
+    NS\ColorAdminBundle\Form\Extension\IconExtension:
+        tags:
+            - { name: form.type_extension, extended_type: Symfony\Component\Form\Extension\Core\Type\FormType }
+
+    NS\ColorAdminBundle\Form\Extension\OrientationExtension:
+        tags:
+            - { name: form.type_extension, extended_type: Symfony\Component\Form\Extension\Core\Type\FormType }
+
+    NS\ColorAdminBundle\Form\Extension\DetailsExtension:
+        tags:
+            - { name: form.type_extension, extended_type: Symfony\Component\Form\Extension\Core\Type\FormType }
+
+    NS\ColorAdminBundle\Form\Extension\PasswordExtension:
+        tags:
+            - { name: form.type_extension, extended_type: Symfony\Component\Form\Extension\Core\Type\PasswordType }
+
+    NS\ColorAdminBundle\Form\Extension\CollectionExtension:
+        tags:
+            - { name: form.type_extension, extended_type: Symfony\Component\Form\Extension\Core\Type\CollectionType }
+
+    NS\ColorAdminBundle\Form\Extension\DateExtension:
+        tags:
+            - { name: form.type_extension, extended_type: Symfony\Component\Form\Extension\Core\Type\DateType }
+
+    NS\ColorAdminBundle\Form\Extension\FileExtension:
+        tags:
+            - { name: form.type_extension, extended_type: Symfony\Component\Form\Extension\Core\Type\FileType }

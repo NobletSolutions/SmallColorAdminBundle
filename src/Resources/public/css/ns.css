@@ -1,0 +1,26 @@
+label.required:after {
+    content: "*";
+    padding-left: 5px;
+    color: #cc4946;
+}
+
+.is-invalid .invalid-feedback {
+    display: block;
+}
+
+.is-invalid .valid-feedback {
+    display: block;
+}
+
+.custom-file-label {
+    left: 10px;
+    right: 10px;
+}
+
+.custom-file, .custom-file-input {
+    height: auto;
+}
+
+.navbar-header img.logo {
+    margin-right: 0.5rem;
+}

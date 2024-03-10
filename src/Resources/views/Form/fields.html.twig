@@ -1,0 +1,322 @@
+{%- block form_label -%}
+    {% if label is not same as(false) -%}
+        {% if not compound -%}
+            {% set label_attr = label_attr|merge({'for': id}) %}
+        {%- endif -%}
+        {% set label_attr = label_attr|merge({'class': (label_attr.class|default(vertical ? 'col-form-label' : 'col-md-3 col-form-label'))|trim}) %}
+        {% if required %}
+            {% set label_attr = label_attr|merge({'class': (label_attr.class ~ ' required')|trim}) %}
+        {% endif %}
+        {% if label is empty -%}
+            {%- if label_format is not empty -%}
+                {% set label = label_format|replace({
+                    '%name%': name,
+                    '%id%': id,
+                }) %}
+            {%- else -%}
+                {% set label = name|humanize %}
+            {%- endif -%}
+        {%- endif -%}
+        <{{ element|default('label') }}{% if label_attr %}{% with { attr: label_attr } %}{{ block('attributes') }}{% endwith %}{% endif %}>
+        {%- if translation_domain is same as(false) -%}
+            {{- label|raw -}}
+        {%- else -%}
+            {{- label|trans({}, translation_domain)|raw -}}
+        {%- endif -%}
+        </{{ element|default('label') }}>
+    {%- endif -%}
+{%- endblock form_label -%}
+
+{%- block form_widget_very_simple -%}
+    <input
+            type="{{ type }}"
+            {{ block('widget_attributes') }}
+            {% if value is not empty %}
+                value="{{ value }}"
+            {% endif %}
+    />
+{%- endblock -%}
+
+{%- block form_widget_simple -%}
+    {%- set type = type|default('text') -%}
+    {% set default = icon is defined and icon ? 'form-control' : 'form-control m-b-5' %}
+    {% set class = (attr.class|default(default) ~ ' ' ~ (state == 'valid' ? 'is-valid' : (state == 'invalid' or errors|length > 0) ? ' is-invalid' : ''))|trim %}
+    {% set attr = attr|merge({'class': class}) %}
+
+    {% if icon is defined and icon %}
+        {% set icon_position = icon_position is defined ? icon_position : false %}
+        <div class="input-group">
+            {% if not icon_position or icon_position == 'left' %}
+                <div class="input-group-prepend">
+                <span class="input-group-text">
+                    <span class="fa fa-{{ icon }}"></span>
+                </span>
+                </div>
+            {% endif %}
+
+            {{ block('form_widget_very_simple') }}
+
+            {% if icon_position == 'right' %}
+                <div class="input-group-append">
+                <span class="input-group-text">
+                    <span class="fa fa-{{ icon }}"></span>
+                </span>
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        {{ block('form_widget_very_simple') }}
+    {% endif %}
+{%- endblock form_widget_simple -%}
+
+{%- block choice_widget_expanded -%}
+    <div {{ block('widget_container_attributes') }}>
+        {% if form.vars.choices|length != form.children|length %}
+            {% for name, choices in form.vars.choices %}
+                <div class="form-group">
+                    <strong>{{ name|trans }}</strong>
+                    <div class="form-check">
+                        {% for key,choice in choices %}
+                            <div class="{{ form.vars.multiple ? 'checkbox checkbox-css' : 'radio radio-css' }}">
+                                {{ form_widget(form[key]) }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            {%- for child in form %}
+                <div class="form-check">
+                    <div class="{{ form.vars.multiple ? 'checkbox checkbox-css' : 'radio radio-css' }}">
+                        {{ form_widget(child) }}
+                    </div>
+                </div>
+            {% endfor -%}
+        {% endif %}
+    </div>
+{%- endblock choice_widget_expanded -%}
+
+{% block form_row %}
+    <div id="{{ id }}_row"
+         class="form-group {{ vertical ? '' : 'row' }} m-b-15 {{ errors|length > 0 ? 'has-error has-feedback is-invalid' }} {{ required ? 'required' : '' }} {{ state == 'valid' ? 'is-valid' : state == 'invalid' ? 'is-invalid' : '' }}"
+    >
+        {{ form_label(form) }}
+        <div class="{{ wrapper_class|default(vertical ? '' : 'col-md-9') }} field-wrapper">
+            {{ form_widget(form) }}
+            {{ note ? ('<small class="f-s-12 text-grey-darker">'~note~'</small>')|raw : '' }}
+            {{ form_errors(form) }}
+        </div>
+    </div>
+{% endblock %}
+
+{% block checkbox_widget %}
+    {% set attr = attr|merge({'class': errors|length > 0 ? 'has-error has-feedback is-invalid' ~ (attr.class|default('form-check-input')|trim)}) %}
+    <input type="checkbox" {{ block('widget_attributes') }}{% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %} />
+    {{ form_label(form, empty_label or form.parent.vars.empty_label ? "&#xfeff;" : null, {'label_attr':{'class':'form-check-label'}}) }}
+{% endblock %}
+
+{% block radio_widget %}
+    {% set attr = attr|merge({'class': errors|length > 0 ? 'has-error has-feedback is-invalid' ~ (attr.class|default('form-radio-input')|trim)}) %}
+    <input type="radio" {{ block('widget_attributes') }}{% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %} />
+    {{ form_label(form, empty_label or form.parent.vars.empty_label ? "&#xfeff;" : null, {'label_attr':{'class':'form-check-label'}}) }}
+{% endblock %}
+
+{% block checkbox_row %}
+    <div class="form-group {{ vertical ? '' : 'row' }} m-b-15 {{ errors|length > 0 ? 'has-error has-feedback is-invalid' }} {{ required ? 'required' : '' }} {{ state == 'valid' ? 'is-valid' : state == 'invalid' ? 'is-invalid' : '' }}">
+        {{ form_label(form) }}
+        <div class="{{ wrapper_class|default(vertical ? '' : 'col-md-9') }}">
+            <div class="form-check">
+                <div class="checkbox checkbox-css">
+                    {{ form_widget(form) }}
+                </div>
+            </div>
+            {{ note ? ('<p>'~note~'</p>')|raw : '' }}
+            {{ form_errors(form) }}
+        </div>
+    </div>
+{% endblock %}
+
+{% block radio_row %}
+    <div class="form-group {{ vertical ? '' : 'row' }} m-b-15 {{ errors|length > 0 ? 'has-error has-feedback is-invalid' }} {{ required ? 'required' : '' }} {{ state == 'valid' ? 'is-valid' : state == 'invalid' ? 'is-invalid' : '' }}">
+        {{ form_label(form) }}
+        <div class="{{ wrapper_class|default(vertical ? '' : 'col-md-9') }}">
+            <div class="form-check">
+                <div class="radio radio-css">
+                    {{ form_widget(form) }}
+                </div>
+            </div>
+            {{ note ? ('<p>'~note~'</p>')|raw : '' }}
+            {{ form_errors(form) }}
+        </div>
+    </div>
+{% endblock %}
+
+{% block file_widget %}
+    {%- set type = 'file' -%}
+    {% set attr = attr|merge({'class': attr.class|default()~' custom-file-input form-control'}) %}
+    {{ block('form_widget_very_simple') }}
+{% endblock %}
+
+{% block custom_file_label %}
+    {% set label_attr = label_attr|merge({'class': label_attr.class|default()~' custom-file-label', 'for':id}) %}
+    {% set label = picker_label %}
+    {{ block('form_label') }}
+{% endblock %}
+
+{% block file_row %}
+    {% set widget = widget is defined ? widget : block('file_widget') %}
+    <div class="form-group {{ vertical ? '' : 'row' }} m-b-15 {{ errors|length > 0 ? 'has-error has-feedback is-invalid' }} {{ required ? 'required' : '' }} {{ state == 'valid' ? 'is-valid' : state == 'invalid' ? 'is-invalid' : '' }}">
+        {{ form_label(form) }}
+        <div class="custom-file {{ wrapper_class|default(vertical ? '' : 'col-md-9') }}">
+            {{ widget|raw }}
+            {{ block('custom_file_label') }}
+            {{- form_errors(form) -}}
+        </div>
+    </div>
+{% endblock %}
+
+{%- block vich_file_row -%}
+    {%- set force_error = true -%}
+    {% set widget = block('vich_file_widget') %}
+    {{- block('file_row') -}}
+{%- endblock -%}
+
+{%- block vich_file_widget -%}
+    {#    <div class="vich-file">#}
+    {{- form_widget(form.file) -}}
+    {%- if form.delete is defined -%}
+        {{- form_row(form.delete) -}}
+    {%- endif -%}
+
+    {%- if download_uri -%}
+        {% set download_label = not download_label ? download_uri : download_label %}
+        <a href="{{ download_uri }}">{{ translation_domain is same as(false) ? download_label : download_label|trans({}, translation_domain) }}</a>
+    {%- endif -%}
+    {#    </div>#}
+{%- endblock -%}
+
+{%- block vich_image_row -%}
+    {%- set force_error = true -%}
+    {% set widget = block('vich_image_widget') %}
+    {{- block('file_row') -}}
+{%- endblock -%}
+
+{%- block vich_image_widget -%}
+    {#    <div class="vich-image">#}
+    {{- form_widget(form.file) -}}
+    {%- if form.delete is defined -%}
+        {{- form_row(form.delete) -}}
+    {%- endif -%}
+
+    {%- if image_uri -%}
+        <a href="{{ image_uri }}"><img src="{{ image_uri }}" alt="" /></a>
+    {%- endif -%}
+    {%- if download_uri -%}
+        <a href="{{ download_uri }}">{{ translation_domain is same as(false) ? download_label : download_label|trans({}, translation_domain) }}</a>
+    {%- endif -%}
+    {#    </div>#}
+{%- endblock -%}
+
+{#{% block file_row %}#}
+{#    <div class="form-group {{ errors|length > 0 ? 'has-error has-feedback is-invalid' }} {{ required ? 'required' : '' }} {{ state == 'valid' ? 'is-valid' : state == 'invalid' ? 'is-invalid' : '' }}">#}
+{#        {{ form_label(form) }}#}
+{#        <div class="{{ wrapper_class|default('col-sm-9') }}">#}
+{#            {{ form_widget(form, attr) }}#}
+{#            {% if form.vars.file %}Existing File: {{ form.vars.file.filename }}{% else %}No previous file{% endif %}#}
+{#            {{ form_errors(form) }}#}
+{#        </div>#}
+{#    </div>#}
+{#{% endblock %}#}
+
+{%- block choice_widget_collapsed -%}
+    {% set class = attr.class|default('form-control ' ~ (required ? 'required':''))|trim %}
+    {% set attr = attr|merge({'class': class}) %}
+    {%- if required and placeholder is none and not placeholder_in_choices and not multiple and (attr.size is not defined or attr.size <= 1) -%}
+        {% set required = false %}
+    {%- endif -%}
+    <select {{ block('widget_attributes') }}{% if multiple %} multiple="multiple"{% endif %}>
+        {%- if placeholder is not none -%}
+            <option value=""{% if required and value is empty %} selected="selected"{% endif %}>{{ placeholder != '' ? (translation_domain is same as(false) ? placeholder : placeholder|trans({}, translation_domain)) }}</option>
+        {%- endif -%}
+        {%- if preferred_choices|length > 0 -%}
+            {% set options = preferred_choices %}
+            {{- block('choice_widget_options') -}}
+            {%- if choices|length > 0 and separator is not none -%}
+                <option disabled="disabled">{{ separator }}</option>
+            {%- endif -%}
+        {%- endif -%}
+        {%- set options = choices -%}
+        {{- block('choice_widget_options') -}}
+    </select>
+{%- endblock choice_widget_collapsed -%}
+
+{%- block textarea_widget -%}
+    {% set attr = attr|merge({'class': attr.class|default('form-control')|trim}) %}
+    <textarea {{ block('widget_attributes') }} class="{{ state == 'valid' ? 'is-valid' : state == 'invalid' ? 'is-invalid' : '' }}">{{ value }}</textarea>
+{%- endblock textarea_widget -%}
+
+{%- block datepicker_widget %}
+    {%- set type = 'text' -%}
+    <div class="input-group date datepicker-input"
+            {% if start_date %}
+                data-date-start-date="{{ start_date is same as(true) ? 'Date.default' : start_date }}"
+            {% endif %}
+    >
+        {%- set attr = attr|merge({'class':'form-control'}) %}
+        {{ block('form_widget_simple') }}
+        <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+    </div>
+{%- endblock %}
+
+{%- block email_widget -%}
+    {%- set type = 'email' -%}
+    {%- set icon = icon|default('at') -%}
+    {{ block('form_widget_simple') }}
+{%- endblock -%}
+
+{%- block form_errors -%}
+    {%- if errors|length > 0 -%}
+        {% set attr = attr|merge({'class': 'invalid-feedback'}) %}
+
+        {%- for error in errors -%}
+            <div {{ block('widget_attributes') }}>
+                {{ error.message|trans }}
+            </div>
+        {%- endfor -%}
+    {%- endif -%}
+{%- endblock -%}
+
+{%- block filterable_select_widget -%}
+    {% set class = attr.class|default('form-control ' ~ (required ? 'required':''))|trim %}
+    {% set attr = attr|merge({'class': class~' select2'}) %}
+    {{ block('choice_widget_collapsed') }}
+{%- endblock -%}
+
+{%- block password_widget -%}
+    {%- set type = type|default('password') -%}
+    {% set class = (attr.class|default('form-control'))|trim %}
+    {% if not toggle and indicator %}
+        {% set class = class~' password-indicator' %}
+    {% endif %}
+    {% set attr = attr|merge({'class': class}) %}
+    {% if toggle %}
+        {% set attr = attr|merge({'data-toggle': 'password', 'data-placement':placement}) %}
+    {% endif %}
+    {{ block('form_widget_simple') }}
+    {% if not toggle and indicator %}
+        <div id="{{ id }}_passstrength" class="is0 m-t-5"></div>
+    {% endif %}
+{%- endblock password_widget -%}
+
+{%- block collection_widget -%}
+    {% if prototype is defined and not prototype.rendered %}
+        {%- set attr = attr|merge({'data-prototype': form_row(prototype), 'data-child-count':form.children|length }) -%}
+    {% endif %}
+    {# Delete button: <button type="button" class="ns-collection-remove btn btn-danger" href="#{{ id }}_row">Delete</button> #}
+    {{- block('form_widget') -}}
+    {% if add_button %}
+        <button type="button" href="#{{ id }}" class="btn btn-primary ns-collection-add">
+            <i class="fa fa-{{ add_button_icon }}"></i> {{ add_button_label }}
+        </button>
+    {% endif %}
+{%- endblock -%}
